@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: codespaces-tracker
+  name: codespaces-tracker
+  namespace: codespaces-tracker
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: codespaces-tracker
+  type: ClusterIP
+

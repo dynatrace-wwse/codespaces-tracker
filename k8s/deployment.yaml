@@ -1,0 +1,82 @@
+
+apiVersion: v1
+kind: List
+metadata:
+resourceVersion: ""
+items:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    labels:
+      app: codespaces-tracker
+    name: codespaces-tracker
+    namespace: codespaces-tracker
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 3
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: codespaces-tracker
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          app: codespaces-tracker
+      spec:
+        containers:
+        - image: ${IMAGE}
+          imagePullPolicy: Always
+          name: codespaces-tracker
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: POD_SERVICE_ACCOUNT
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.serviceAccountName
+            - name: RELEASE_VERSION
+              value: "${RELEASE_VERSION}"
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: codespaces-tracker
+    name: codespaces-tracker
+    namespace: codespaces-tracker
+  spec:
+    ports:
+    - port: 8080
+      protocol: TCP
+      targetPort: 8080
+    selector:
+      app: codespaces-tracker
+    type: ClusterIP
+

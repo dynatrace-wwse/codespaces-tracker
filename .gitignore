@@ -1,0 +1,38 @@
+# Temporary MD files
+*~*.md
+# No generated file
+**/gen/*/*.yaml
+
+# No logs
+log/*
+
+**/gen/**.yaml
+# No temp
+/tmp/**
+**/tmp/**
+
+/target/**
+
+# No Reports
+/report/**
+
+# Dont add test files
+*test*
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# No other configs
+config_**.json
+
+# generated files
+**-gen.yaml
+# loc files
+**-loc**
+# No mounted file shares
+**sshfs**
+# No DS Store files
+.DS_Store
+
+# No Config file
+config.json
