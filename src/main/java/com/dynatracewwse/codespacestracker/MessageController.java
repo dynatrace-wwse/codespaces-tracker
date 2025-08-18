@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 
 @RestController
@@ -30,6 +31,16 @@ public class MessageController {
         // We log the payload and retrieve the metrics as Bizevents from the log/code with Dynatrace. 
         // This way we can add more metrics to the payload without the need of recompiling or changing this code
         String clientIp = request.getRemoteAddr();
+
+        if (jsonNode.isObject()) {
+            ObjectNode objectNode = (ObjectNode) jsonNode;
+            // Add a new field
+            objectNode.put("ip", clientIp);
+            
+            //Query geo locations
+            //TODO: Add geo locations and modify data extraction of bizevent.
+        }
+        
         logger.info(" IP:" + clientIp + " JSON: " + jsonNode.toString());
         return ResponseEntity.ok("Tracking information received, thank you! Dynatrace loves you!\n");
     }
