@@ -56,6 +56,16 @@ items:
                   fieldPath: spec.serviceAccountName
             - name: RELEASE_VERSION
               value: "${RELEASE_VERSION}"
+            - name: MAXMIND_ACCOUNT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: maxmind-credentials
+                  key: MAXMIND_ACCOUNT_ID
+            - name: MAXMIND_LICENSE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: maxmind-credentials
+                  key: MAXMIND_LICENSE_KEY
           resources: {}
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File

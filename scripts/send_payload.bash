@@ -3,7 +3,7 @@
 #ENDPOINT_CODESPACES_TRACKER="http://localhost:8080/api/receive"
 ENDPOINT_CODESPACES_TRACKER="https://codespaces-tracker.whydevslovedynatrace.com/api/receive"
 CODESPACES_TRACKER_TOKEN=$(echo -n "ilovedynatrace" | base64)
-RepositoryName="myrepo"
+RepositoryName="test-repo"
 ERROR_COUNT=1
 DURATION=10
 INSTANTIATION_TYPE="local"

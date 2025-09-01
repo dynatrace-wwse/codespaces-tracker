@@ -5,7 +5,7 @@ setVariables() {
     NAME="codespaces-tracker"
     NAMESPACE="codespaces-tracker"
 
-    VERSION=1.03
+    VERSION=1.06
     IMAGE="shinojosa/$NAME:$VERSION"
 
     DEPLOYMENT=$NAME
@@ -30,6 +30,8 @@ createDeployment() {
 
     kubectl apply -f k8s/gen/deploy-$YAMLFILE
     # kubectl set image deployment/$deployment $name=$container -n $ns
+    echo "make sure to create the secret maxmind-credentials"
+    #kubectl create secret generic maxmind-credentials --from-literal=MAXMIND_ACCOUNT_ID=$MAXMIND_ACCOUNT_ID --from-literal=MAXMIND_LICENSE_KEY=$MAXMIND_LICENSE_KEY -n codespaces-tracker
 }
 
 

@@ -12,6 +12,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 
+
 @RestController
 @RequestMapping("/api")
 public class MessageController {
@@ -35,10 +36,35 @@ public class MessageController {
         if (jsonNode.isObject()) {
             ObjectNode objectNode = (ObjectNode) jsonNode;
             // Add a new field
-            objectNode.put("ip", clientIp);
+            objectNode.put("client.ip", clientIp);
             
             //Query geo locations
-            //TODO: Add geo locations and modify data extraction of bizevent.
+            JsonNode geoNode = MaxMindGeoIP.getInstance().queryIP(clientIp);
+            String continent = "";
+            String country = "";
+            String region = "";
+            String city = "";
+
+            if (geoNode != null ){
+                // geo.continent.name > continent.names.en
+                continent = geoNode.path("continent").path("names").path("en").asText();
+                // geo.region.name -> subdivisions.[0].names.en
+                JsonNode subdivisionsNode = geoNode.path("subdivisions");
+                if (subdivisionsNode.isArray() && subdivisionsNode.size() > 0) {
+                    JsonNode firstSubdivision = subdivisionsNode.get(0);
+                    // Now you can access properties of the first subdivision, for example:
+                    region = firstSubdivision.path("names").path("en").asText();
+                }
+                // geo.country.name > country.names.en
+                country = geoNode.path("country").path("names").path("en").asText();
+                
+                // geo.city.name -> city.names.en
+                city = geoNode.path("city").path("names").path("en").asText();
+            }
+            objectNode.put("geo.continent.name", continent);
+            objectNode.put("geo.country.name", country);
+            objectNode.put("geo.region.name", region);
+            objectNode.put("geo.city.name", city);
         }
         
         logger.info(" IP:" + clientIp + " JSON: " + jsonNode.toString());
