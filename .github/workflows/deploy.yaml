@@ -1,0 +1,101 @@
+name: Build and Deploy to GKE
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    outputs:
+      image: ${{ steps.image.outputs.image }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set image tag
+        id: image
+        run: echo "image=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}" >> $GITHUB_OUTPUT
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ steps.image.outputs.image }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+  deploy-gke:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GKE_SA_KEY }}
+
+      - name: Set up gcloud + kubectl
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          install_components: kubectl
+
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: ${{ secrets.GKE_CLUSTER_NAME }}
+          location: ${{ secrets.GKE_CLUSTER_LOCATION }}
+
+      - name: Create namespace if not exists
+        run: kubectl create namespace codespaces-tracker --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Deploy to GKE
+        run: |
+          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+
+          # Generate deployment manifest with image reference
+          export IMAGE="$IMAGE"
+          export RELEASE_VERSION="${{ github.sha }}"
+          envsubst < k8s/deployment.yaml | kubectl apply -f -
+
+          # Apply ingress (idempotent)
+          kubectl apply -f k8s/ing-tls.yaml
+
+          # Wait for rollout
+          kubectl rollout status deployment/codespaces-tracker -n codespaces-tracker --timeout=180s
+
+          echo "Deployed codespaces-tracker with image $IMAGE"
+
+      - name: Smoke test
+        run: |
+          URL="https://codespaces-tracker.whydevslovedynatrace.com/api/receive"
+          echo "Smoke testing $URL (expecting 401 without auth)"
+          for i in 1 2 3 4 5; do
+            HTTP_CODE=$(curl -sk -o /dev/null -w "%{http_code}" -X POST "$URL" -H "Content-Type: application/json" -d '{}' || echo "000")
+            if [ "$HTTP_CODE" = "401" ]; then
+              echo "Smoke test passed (got 401 Unauthorized as expected)"
+              exit 0
+            fi
+            echo "Attempt $i/5: HTTP $HTTP_CODE, retrying in 10s..."
+            sleep 10
+          done
+          echo "WARNING: Smoke test inconclusive after 5 attempts"

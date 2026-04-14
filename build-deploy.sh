@@ -5,7 +5,7 @@ setVariables() {
     NAME="codespaces-tracker"
     NAMESPACE="codespaces-tracker"
 
-    VERSION=1.06
+    VERSION=1.07
     IMAGE="shinojosa/$NAME:$VERSION"
 
     DEPLOYMENT=$NAME

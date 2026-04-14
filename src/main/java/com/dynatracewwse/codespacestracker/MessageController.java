@@ -42,8 +42,11 @@ public class MessageController {
             JsonNode geoNode = MaxMindGeoIP.getInstance().queryIP(clientIp);
             String continent = "";
             String country = "";
+            String countryIsoCode = "";
             String region = "";
             String city = "";
+            double latitude = 0;
+            double longitude = 0;
 
             if (geoNode != null ){
                 // geo.continent.name > continent.names.en
@@ -52,19 +55,25 @@ public class MessageController {
                 JsonNode subdivisionsNode = geoNode.path("subdivisions");
                 if (subdivisionsNode.isArray() && subdivisionsNode.size() > 0) {
                     JsonNode firstSubdivision = subdivisionsNode.get(0);
-                    // Now you can access properties of the first subdivision, for example:
                     region = firstSubdivision.path("names").path("en").asText();
                 }
                 // geo.country.name > country.names.en
                 country = geoNode.path("country").path("names").path("en").asText();
-                
+                // geo.country.isoCode > country.iso_code (ISO 3166-1 alpha-2)
+                countryIsoCode = geoNode.path("country").path("iso_code").asText();
                 // geo.city.name -> city.names.en
                 city = geoNode.path("city").path("names").path("en").asText();
+                // geo.latitude / geo.longitude -> location.latitude / location.longitude
+                latitude = geoNode.path("location").path("latitude").asDouble(0);
+                longitude = geoNode.path("location").path("longitude").asDouble(0);
             }
             objectNode.put("geo.continent.name", continent);
             objectNode.put("geo.country.name", country);
+            objectNode.put("geo.country.isoCode", countryIsoCode);
             objectNode.put("geo.region.name", region);
             objectNode.put("geo.city.name", city);
+            objectNode.put("geo.latitude", latitude);
+            objectNode.put("geo.longitude", longitude);
         }
         
         logger.info(" IP:" + clientIp + " JSON: " + jsonNode.toString());
