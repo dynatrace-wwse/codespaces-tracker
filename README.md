@@ -1,6 +1,8 @@
 
 # Dynatrace Codespaces Tracker
 
+[![Build and Deploy to GKE](https://github.com/dynatrace-wwse/codespaces-tracker/actions/workflows/deploy.yaml/badge.svg)](https://github.com/dynatrace-wwse/codespaces-tracker/actions/workflows/deploy.yaml) [![Version](https://img.shields.io/github/v/release/dynatrace-wwse/codespaces-tracker?color=blueviolet)](https://github.com/dynatrace-wwse/codespaces-tracker/releases) [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg?color=green)](https://github.com/dynatrace-wwse/codespaces-tracker/blob/main/LICENSE)
+
 Spring Boot application running on GKE that receives JSON payloads from GitHub Codespaces instantiations. The payload is enriched with geo-location data (via MaxMind GeoLite) and logged. Dynatrace OneAgent picks up the logs and generates BizEvents for adoption analytics.
 
 ## Architecture
